@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
   return sequelize.define(
-    "AuthUser",
+    'AuthUser',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -13,6 +13,6 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
       },
     },
-    { freezeTableName: true, timestamps: false }
+    { freezeTableName: true, timestamps: false },
   );
 };

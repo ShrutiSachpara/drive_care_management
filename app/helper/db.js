@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: 'mysql',
-  }
+  },
 );
 
 sequelize
@@ -28,10 +28,13 @@ db.sequelize = sequelize;
 
 db.authUserModel = require('../model/user')(sequelize, Sequelize);
 
-db.sequelize.sync().then(() => {
-  logger.info('yes re-sync');
-}).catch((err) => {
-  console.log('no sync error', err);
-})
+db.sequelize
+  .sync()
+  .then(() => {
+    logger.info('yes re-sync');
+  })
+  .catch((err) => {
+    logger.error('no sync error', err);
+  });
 
 module.exports = db;

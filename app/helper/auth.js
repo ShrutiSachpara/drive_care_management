@@ -1,11 +1,11 @@
-const jwt = require("jsonwebtoken");
-const { RESPONSE_STATUS } = require("../utils/enum");
-const message = require("../utils/message");
-const logger = require("../logger/logger");
+const jwt = require('jsonwebtoken');
+const { RESPONSE_STATUS } = require('../utils/enum');
+const message = require('../utils/message');
+const logger = require('../logger/logger');
 // Middleware for Generating a new JWT Token
 const generateToken = (data) => {
   return jwt.sign({ id: data.id, role: data.role }, process.env.PRIVATEKEY, {
-    expiresIn: "365d",
+    expiresIn: '365d',
   });
 };
 
@@ -13,7 +13,7 @@ const generateToken = (data) => {
 const authorization = (roles = []) => {
   return (req, res, next) => {
     try {
-      const token = req.header("Authorization");
+      const token = req.header('Authorization');
       if (!token) {
         logger.error(message.AUTH_MISSING);
         res.status(401).json({
@@ -37,9 +37,9 @@ const authorization = (roles = []) => {
       }
     } catch (err) {
       let errorResponse =
-        err.name === "TokenExpiredError"
+        err.name === 'TokenExpiredError'
           ? message.TOKEN_EXPIRED
-          : err.name === "JsonWebTokenError"
+          : err.name === 'JsonWebTokenError'
           ? message.TOKEN_INVALID
           : `${message.REQUEST_FAILURE} authorization.`;
 
