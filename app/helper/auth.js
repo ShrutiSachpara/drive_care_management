@@ -1,59 +1,51 @@
 const jwt = require('jsonwebtoken');
-const { RESPONSE_STATUS } = require('../utils/enum');
 const message = require('../utils/message');
 const logger = require('../logger/logger');
-// Middleware for Generating a new JWT Token
+const { GeneralResponse } = require('../utils/response');
+const { RESPONSE_STATUS } = require('../utils/enum');
+const { StatusCodes } = require('http-status-codes');
+const { GeneralError } = require('../utils/error');
+
 const generateToken = (data) => {
   return jwt.sign({ id: data.id, role: data.role }, process.env.PRIVATEKEY, {
     expiresIn: '365d',
   });
 };
 
-// Middleware for authorization a JWT Token
-const authorization = (roles = []) => {
-  return (req, res, next) => {
-    try {
-      const token = req.header('Authorization');
-      if (!token) {
-        logger.error(message.AUTH_MISSING);
-        res.status(401).json({
-          status: RESPONSE_STATUS.ERROR,
-          code: 401,
-          message: message.AUTH_MISSING,
-        });
-      }
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-      const verified = jwt.verify(token, process.env.PRIVATEKEY);
-      req.user = verified;
-      if (roles.length > 0 && roles.some((role) => role === verified.role)) {
-        next();
-      } else {
-        logger.error(message.ACCESS_REQUIRED);
-        res.status(401).json({
-          status: RESPONSE_STATUS.ERROR,
-          code: 401,
-          message: message.ACCESS_REQUIRED,
-        });
-      }
-    } catch (err) {
-      let errorResponse =
-        err.name === 'TokenExpiredError'
-          ? message.TOKEN_EXPIRED
-          : err.name === 'JsonWebTokenError'
-          ? message.TOKEN_INVALID
-          : `${message.REQUEST_FAILURE} authorization.`;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
 
-      logger.error(message.errorResponse);
-      res.status(401).json({
-        status: RESPONSE_STATUS.ERROR,
-        code: 401,
-        message: errorResponse,
-      });
-    }
-  };
+    jwt.verify(token, process.env.PRIVATEKEY, (err, user) => {
+      if (err) {
+        logger.error(err);
+        next(
+          new GeneralResponse(
+            message.TOKEN_INVALID,
+            undefined,
+            StatusCodes.FORBIDDEN,
+            RESPONSE_STATUS.ERROR,
+          ),
+        );
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    next(
+      new GeneralError(
+        message.TOKEN_MISSING,
+        StatusCodes.UNAUTHORIZED,
+        undefined,
+        RESPONSE_STATUS.ERROR,
+      ),
+    );
+  }
 };
 
 module.exports = {
   generateToken,
-  authorization,
+  authenticateJWT,
 };

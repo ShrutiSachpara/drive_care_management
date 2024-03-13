@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 
 const storage = multer.diskStorage({
-  destination: 'public/uploads',
+  destination: path.join(__dirname, '../../public/uploads'),
   filename: function (req, file, cb) {
     cb(
       null,
@@ -11,10 +11,8 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
-  storage: storage,
-});
+const upload = multer({ storage: storage }); // Modify here to use .single() method
 
 module.exports = {
-  upload,
+  upload: upload,
 };
