@@ -4,9 +4,9 @@ const { ROLE } = require('../utils/enum');
 module.exports = {
   registerValidation: Joi.object().keys({
     name: Joi.string().required().empty().messages({
-      'string.base': `name should be a type of 'text'`,
-      'string.empty': `name cannot be an empty field`,
-      'any.required': `name is a required field`,
+      'string.base': `Name should be a type of 'text'`,
+      'string.empty': `Name cannot be an empty field`,
+      'any.required': `Name is a required field`,
     }),
     email_id: Joi.string().required().empty().email().messages({
       'string.base': `Email id should be a type of 'text'`,
@@ -82,7 +82,7 @@ module.exports = {
 
   editProfileValidation: Joi.object().keys({
     name: Joi.string().optional().allow('').messages({
-      'string.base': `name is should be type of a text`,
+      'string.base': `Name is should be type of a text`,
     }),
     phone_no: Joi.string()
       .pattern(/^[0-9]{10}$/)

@@ -16,7 +16,6 @@ module.exports = {
   register: async (req, next) => {
     try {
       let { email_id, password } = req.body;
-
       const findUser = await findOne(usersModel, { email_id });
 
       if (findUser) {
@@ -38,12 +37,12 @@ module.exports = {
 
       updateData.password = await bcrypt.hash(password, saltRounds);
 
-      const registerUser = await create(usersModel, updateData);
+      await create(usersModel, updateData);
 
       next(
         new GeneralResponse(
           `Congratulation! You are ${message.REGISTERED_SUCCESS}`,
-          registerUser.id,
+          undefined,
           StatusCodes.CREATED,
           RESPONSE_STATUS.SUCCESS,
         ),
@@ -65,17 +64,7 @@ module.exports = {
     try {
       const { email_id, password } = req.body;
 
-      const findUser = await findOne(usersModel, { email_id }).catch((err) => {
-        logger.error(err);
-        next(
-          new GeneralError(
-            `${message.REQUEST_FAILURE} find`,
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            undefined,
-            RESPONSE_STATUS.ERROR,
-          ),
-        );
-      });
+      const findUser = await findOne(usersModel, { email_id });
 
       if (!findUser) {
         next(
@@ -89,7 +78,8 @@ module.exports = {
       }
 
       const comparePassword = await bcrypt.compare(password, findUser.password);
-      if (comparePassword && Object.keys(findUser).length > 0) {
+
+      if (comparePassword) {
         let tokenObj = {
           id: findUser.id,
           role: findUser.role,
@@ -121,7 +111,7 @@ module.exports = {
         new GeneralError(
           `${message.FAILED_TO} login.`,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          err?.original?.sqlMessage ? err.original.sqlMessage : undefined,
+          err?.original?.sqlMessage ? err.original.sqlMessage : err,
           RESPONSE_STATUS.ERROR,
         ),
       );
@@ -129,18 +119,18 @@ module.exports = {
   },
 
   viewProfile: async (req, next) => {
-    const userId = req.user.id;
     try {
-      const user = await findOne(
+      const userId = req.user.id;
+      const userData = await findOne(
         usersModel,
         { id: userId, is_deleted: false },
         ['id', 'name', 'email_id', 'phone_no', 'role', 'profile_image'],
       );
-      if (user) {
+      if (userData) {
         next(
           new GeneralResponse(
             `View Profile Data ${message.GET_SUCCESS}`,
-            user,
+            userData,
             StatusCodes.OK,
             RESPONSE_STATUS.SUCCESS,
           ),
@@ -168,7 +158,7 @@ module.exports = {
     }
   },
 
-  updateProfile: async (req, body, next) => {
+  updateProfile: async (req, next) => {
     try {
       const id = req.user.id;
 

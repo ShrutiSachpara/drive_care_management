@@ -1,32 +1,32 @@
 module.exports = {
-  create: async (collection, insertData, transaction) => {
+  create: (collection, insertData, transaction) => {
     return collection.create(insertData, { transaction: transaction });
   },
 
-  bulkCreate: async (collection, insertData, transaction) => {
+  bulkCreate: (collection, insertData, transaction) => {
     return collection.bulkCreate(insertData, { transaction: transaction });
   },
 
-  findOne: async (collection, condition, selectAttribute) => {
+  findOne: (collection, condition, selectAttribute) => {
     return collection.findOne({
       attributes: selectAttribute,
       where: condition,
     });
   },
 
-  update: async (collection, condition, selectAttribute) => {
+  update: (collection, condition, selectAttribute) => {
     return collection.update(selectAttribute, {
       where: condition,
     });
   },
 
-  destroy: async (collection, condition) => {
+  destroy: (collection, condition) => {
     return collection.destroy({
       where: condition,
     });
   },
 
-  findAll: async (collection, condition, selectAttribute) => {
+  findAll: (collection, condition, selectAttribute) => {
     return collection.findAll({
       attributes: selectAttribute,
       where: condition,

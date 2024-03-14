@@ -15,6 +15,7 @@ const {
 } = require('../../validation/userValidation');
 
 const { authenticateJWT } = require('../../helper/auth');
+const { ROLE } = require('../../utils/enum');
 
 router.post(
   '/registration',
@@ -25,11 +26,15 @@ router.post(
 
 router.post('/login', validator.body(loginValidation), loginController);
 
-router.get('/viewProfile', authenticateJWT, viewProfileController);
+router.get(
+  '/viewProfile',
+  authenticateJWT([ROLE.CUSTOMER, ROLE.MANAGER, ROLE.MECHANIC]),
+  viewProfileController,
+);
 
 router.put(
   '/editProfile',
-  authenticateJWT,
+  authenticateJWT([ROLE.CUSTOMER, ROLE.MANAGER, ROLE.MECHANIC]),
   upload.single('profile_image'),
   validator.body(editProfileValidation),
   updateProfileController,

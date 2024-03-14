@@ -19,6 +19,6 @@ module.exports = {
   },
 
   updateProfileController: async (req, res, next) => {
-    return updateProfile(req, req.body, next);
+    return updateProfile(req, next);
   },
 };
