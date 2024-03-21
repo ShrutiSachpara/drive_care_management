@@ -55,13 +55,18 @@ export const authorization = (roles: string[] = []) => {
     } catch (err: unknown) {
       let errorResponse;
 
-      if (err instanceof TokenExpiredError) {
+      switch (true) {
+      case err instanceof TokenExpiredError:
         errorResponse = message.TOKEN_EXPIRED;
-      } else if (err instanceof JsonWebTokenError) {
+        break;
+      case err instanceof JsonWebTokenError:
         errorResponse = message.TOKEN_INVALID;
-      } else {
+        break;
+      default:
         errorResponse = `${message.REQUEST_FAILURE} authorization.`;
+        break;
       }
+
       logger.error(errorResponse);
       next(
         new GeneralError(
