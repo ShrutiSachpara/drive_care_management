@@ -1,8 +1,19 @@
-const { StatusCodes } = require('http-status-codes');
-const logger = require('../logger/logger');
+import { StatusCodes } from 'http-status-codes';
+import { logger } from '../logger/logger';
 
-class GeneralError extends Error {
-  constructor(message, statusCode = '', data = '', status) {
+export class GeneralError<T = unknown> extends Error {
+  message: string;
+  statusCode: string | number;
+  data: T | undefined;
+  status: string;
+  result: unknown;
+
+  constructor(
+    message: string,
+    statusCode: string | number = '',
+    data: T | undefined = undefined,
+    status: string,
+  ) {
     logger.info(message);
     super();
     this.message = message;
@@ -23,15 +34,8 @@ class GeneralError extends Error {
     return StatusCodes.INTERNAL_SERVER_ERROR;
   }
 }
-class BadRequest extends GeneralError {}
-class NotFound extends GeneralError {}
-class UnAuthorized extends GeneralError {}
-class ServiceNotAvailable extends GeneralError {}
 
-module.exports = {
-  GeneralError,
-  BadRequest,
-  NotFound,
-  UnAuthorized,
-  ServiceNotAvailable,
-};
+export class BadRequest extends GeneralError {}
+export class NotFound extends GeneralError {}
+export class UnAuthorized extends GeneralError {}
+export class ServiceNotAvailable extends GeneralError {}

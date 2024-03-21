@@ -1,5 +1,5 @@
-require('express-async-errors');
-const winston = require('winston');
+import 'express-async-errors';
+import winston from 'winston';
 
 const options = {
   file: {
@@ -19,7 +19,7 @@ const options = {
   },
 };
 
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
   levels: winston.config.npm.levels,
   transports: [
     new winston.transports.File(options.file),
@@ -27,5 +27,3 @@ const logger = winston.createLogger({
   ],
   exitOnError: false,
 });
-
-module.exports = logger;
