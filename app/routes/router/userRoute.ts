@@ -5,6 +5,9 @@ import {
   loginController,
   viewProfileController,
   updateProfileController,
+  changePasswordController,
+  verifyEmailController,
+  updatePasswordController,
 } from '../../controller/userController';
 import { validator } from '../../helper/validator';
 import { authorization } from '../../helper/auth';
@@ -13,6 +16,9 @@ import {
   editProfileValidation,
   loginValidation,
   registerValidation,
+  resetPasswordValidation,
+  updatePasswordValidation,
+  verifyEmailValidation,
 } from '../../validation/userValidation';
 
 const userRouter = express.Router();
@@ -38,6 +44,25 @@ userRouter.put(
   upload.single('profile_image'),
   validator.body(editProfileValidation),
   updateProfileController,
+);
+
+userRouter.put(
+  '/changePassword',
+  authorization([ROLE.CUSTOMER, ROLE.MANAGER, ROLE.MECHANIC]),
+  validator.body(resetPasswordValidation),
+  changePasswordController,
+);
+
+userRouter.post(
+  '/verifyEmail',
+  validator.body(verifyEmailValidation),
+  verifyEmailController,
+);
+
+userRouter.post(
+  '/updatePassword',
+  validator.body(updatePasswordValidation),
+  updatePasswordController,
 );
 
 export default userRouter;

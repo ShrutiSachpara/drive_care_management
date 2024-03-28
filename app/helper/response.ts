@@ -5,8 +5,8 @@ interface MyResponse {
   res: Response;
   code: number;
   status: string;
-  data: string | undefined;
-  message: string | undefined;
+  data?: string | number | undefined;
+  message?: string | undefined;
   error?: string | undefined;
 }
 

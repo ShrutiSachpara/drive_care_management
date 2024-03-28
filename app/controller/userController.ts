@@ -4,6 +4,9 @@ import {
   login,
   viewProfile,
   updateProfile,
+  changePassword,
+  updatePassword,
+  verifyEmail,
 } from '../service/userService';
 
 export const registerController = (
@@ -36,4 +39,28 @@ export const updateProfileController = async (
   next: NextFunction,
 ) => {
   return updateProfile(req, res, next);
+};
+
+export const changePasswordController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  return changePassword(req, res, next);
+};
+
+export const verifyEmailController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  return verifyEmail(req, res, next);
+};
+
+export const updatePasswordController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  return updatePassword(req, res, next);
 };

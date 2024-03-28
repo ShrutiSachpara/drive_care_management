@@ -16,4 +16,8 @@ export enum message {
   ALREADY_EXIST = 'already exist.',
   ALREADY_UPDATE = 'already update.',
   UPDATE_SUCCESS = 'updated successfully.',
+  NOT_UPDATE_PASSWORD = 'Your password is not updated',
+  INCORRECT_PASSWORD = 'password is incorrect',
+  SEND_SUCCESS = 'send successfully',
+  DOSE_NOT_MATCH = 'dose not match',
 }
