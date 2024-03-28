@@ -89,3 +89,82 @@ export const editProfileValidation = Joi.object({
       'string.pattern.base': 'Phone no  must be a 10-digit numeric value ',
     }),
 });
+
+export const resetPasswordValidation = Joi.object({
+  currentPassword: Joi.string().empty().required().messages({
+    'string.base': 'Current password is should be type of text',
+    'string.empty': 'Current password is not a empty field',
+    'any.required': 'Current password is a required field',
+  }),
+  newPassword: Joi.string()
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+,.?]{8,30}$/)
+    .empty()
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Invalid password. New password must be between 8 and 30 characters and contain at least one lowercase letter, one uppercase letter, and one digit.',
+      'string.empty': 'New password is not a empty field',
+      'any.required': 'New password is a required field',
+    }),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('newPassword'))
+    .required()
+    .empty()
+    .messages({
+      'string.base': 'Confirm password should be type of string',
+      'any.only': 'Confirm password and new password should be same\'',
+      'string.empty': 'Confirm password is not a empty field',
+      'any.required': 'Confirm password is a required field',
+    }),
+});
+
+export const verifyEmailValidation = Joi.object({
+  email_id: Joi.string()
+    .empty()
+    .email({ tlds: { allow: true } })
+    .required()
+    .messages({
+      'string.base': 'Email should be type of string',
+      'string.empty': 'Email is not a empty field',
+      'string.email': 'Email format not valid',
+      'any.required': 'Email is a required field',
+    }),
+});
+
+export const updatePasswordValidation = Joi.object({
+  email_id: Joi.string()
+    .empty()
+    .email({ tlds: { allow: true } })
+    .required()
+    .messages({
+      'string.base': 'Email should be type of string',
+      'string.empty': 'Email is not a empty field',
+      'string.email': 'Email format not valid',
+      'any.required': 'Email is a required field',
+    }),
+  otp: Joi.number().empty().required().messages({
+    'string.base': 'Otp should be type of number',
+    'string.empty': 'Otp is not a empty field',
+    'any.required': 'Otp is a required field',
+  }),
+  newPassword: Joi.string()
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+,.?]{8,30}$/)
+    .empty()
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Invalid password. New password must be between 8 and 30 characters and contain at least one lowercase letter, one uppercase letter, and one digit.',
+      'string.empty': 'New password is not a empty field',
+      'any.required': 'New password is a required field',
+    }),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('newPassword'))
+    .empty()
+    .required()
+    .messages({
+      'string.base': 'Confirm password should be type of string',
+      'any.only': 'Confirm password and password should be same\'',
+      'string.empty': 'Confirm password is not a empty field',
+      'any.required': 'Confirm password is a required field',
+    }),
+});

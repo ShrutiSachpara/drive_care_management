@@ -9,11 +9,14 @@ import { asyncHandler } from '../helper/error';
 import { handleResponse } from '../helper/response';
 import { logger } from '../logger/logger';
 import { Request, Response } from 'express';
+import { Otp } from '../model/otp.model';
+import { OtpSend } from '../helper/mail';
 const saltRounds = 10;
 
 interface CustomRequest extends Request {
   user: {
     id: number;
+    role: string;
   };
 }
 
@@ -187,3 +190,148 @@ export const updateProfile = asyncHandler(
     }
   },
 );
+
+export const changePassword = asyncHandler(
+  async (req: Request | CustomRequest, res: Response) => {
+    const customReq = req as CustomRequest;
+    const userId: number = customReq.user.id;
+
+    const { newPassword, currentPassword } = req.body;
+
+    const findUser = await DbService.findOne(User, {
+      id: userId,
+      is_deleted: false,
+    });
+
+    if (findUser && Object.keys(findUser).length > 0) {
+      const hashPassword = await bcrypt.compare(
+        currentPassword,
+        findUser.password,
+      );
+
+      if (hashPassword) {
+        const updatePassword = await bcrypt.hash(newPassword, saltRounds);
+        const [changedPassword] = await DbService.update(
+          User,
+          { id: userId },
+          { password: updatePassword },
+        );
+
+        if (changedPassword === 1) {
+          logger.info(`Your password is ${message.UPDATE_SUCCESS}`);
+          handleResponse({
+            res,
+            code: StatusCodes.ACCEPTED,
+            status: RESPONSE_STATUS.SUCCESS,
+            message: `Your password is ${message.UPDATE_SUCCESS}`,
+          });
+        } else {
+          logger.error(message.NOT_UPDATE_PASSWORD);
+          handleResponse({
+            res,
+            code: StatusCodes.NOT_FOUND,
+            status: RESPONSE_STATUS.ERROR,
+            message: message.NOT_UPDATE_PASSWORD,
+          });
+        }
+      } else {
+        logger.error(`Your current ${message.INCORRECT_PASSWORD}`);
+        handleResponse({
+          res,
+          code: StatusCodes.NOT_FOUND,
+          status: RESPONSE_STATUS.ERROR,
+          message: `Your current ${message.INCORRECT_PASSWORD}`,
+        });
+      }
+    } else {
+      logger.error(`${message.FAILED_TO} find user.`);
+      handleResponse({
+        res,
+        code: StatusCodes.NOT_FOUND,
+        status: RESPONSE_STATUS.ERROR,
+        message: `${message.FAILED_TO} find user.`,
+      });
+    }
+  },
+);
+
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const { email_id } = req.body;
+
+  const findUser = await DbService.findOne(User, {
+    email_id,
+    is_deleted: false,
+  });
+
+  if (!findUser) {
+    logger.error(`${message.FAILED_TO} find user.`);
+    handleResponse({
+      res,
+      code: StatusCodes.NOT_FOUND,
+      status: RESPONSE_STATUS.ERROR,
+      message: `${message.FAILED_TO} find user.`,
+    });
+  } else {
+    const generateOtp: number = Math.floor(Math.random() * 100000 + 1);
+    await OtpSend(findUser.email_id, generateOtp);
+    await DbService.create(Otp, {
+      email_id: findUser.email_id,
+      otp: generateOtp,
+    });
+
+    logger.info(`Otp is ${message.SEND_SUCCESS}`);
+    handleResponse({
+      res,
+      code: StatusCodes.OK,
+      status: RESPONSE_STATUS.SUCCESS,
+      message: `Otp is ${message.SEND_SUCCESS}`,
+      data: generateOtp,
+    });
+  }
+});
+
+export const updatePassword = asyncHandler(async (req, res) => {
+  const { email_id, newPassword, otp } = req.body;
+
+  console.log('req.body', req.body);
+
+  const findOtp = await DbService.findOne(Otp, { otp, email_id });
+
+  console.log('findOtp', findOtp);
+
+  if (findOtp) {
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const [updatePassword] = await DbService.update(
+      User,
+      { email_id },
+      { password: hashedPassword },
+    );
+
+    if (updatePassword === 1) {
+      await DbService.destroy(Otp, { email_id });
+      logger.info(`Your password is ${message.UPDATE_SUCCESS}`);
+      handleResponse({
+        res,
+        code: StatusCodes.ACCEPTED,
+        status: RESPONSE_STATUS.SUCCESS,
+        message: `Your password is ${message.UPDATE_SUCCESS}`,
+      });
+    } else {
+      logger.error(message.NOT_UPDATE_PASSWORD);
+      handleResponse({
+        res,
+        code: StatusCodes.NOT_FOUND,
+        status: RESPONSE_STATUS.ERROR,
+        message: message.NOT_UPDATE_PASSWORD,
+      });
+    }
+  } else {
+    logger.error(`Your otp or email ${message.DOSE_NOT_MATCH}`);
+    handleResponse({
+      res,
+      code: StatusCodes.NOT_FOUND,
+      status: RESPONSE_STATUS.ERROR,
+      message: `Your otp or email ${message.DOSE_NOT_MATCH}`,
+    });
+  }
+});
