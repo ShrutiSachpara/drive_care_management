@@ -1,20 +1,32 @@
-import { GeneralResponse } from '../utils/response';
+import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { NextFunction, Response } from 'express';
 
-export const handleResponse = (
-  response: Response,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  if (response instanceof GeneralResponse) {
-    return res.status(StatusCodes.OK).json({
-      status: response.status,
-      code: response.statusCode,
-      message: response.message,
-      data: response.data,
-    });
-  }
-  next(response);
-};
+interface MyResponse {
+  res: Response;
+  code: number;
+  status: string;
+  data: string | undefined;
+  message: string | undefined;
+  error?: string | undefined;
+}
+
+export function handleResponse(response: MyResponse) {
+  const { res, code, status, message, data } = response;
+  return res.status(StatusCodes.OK).json({
+    code,
+    status,
+    message,
+    data,
+  });
+}
+
+export function handleError(response: MyResponse) {
+  const { res, message, status, data, code, error } = response;
+  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    code,
+    status,
+    message,
+    data,
+    error,
+  });
+}

@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import dbConfig from './db.config';
+import { User } from '../model/user';
 
 const connection = new Sequelize({
   database: dbConfig.DB_NAME,
@@ -7,7 +8,7 @@ const connection = new Sequelize({
   password: dbConfig.DB_PASSWORD,
   host: dbConfig.HOST,
   dialect: 'mysql',
-  models: [],
+  models: [User],
 });
 
 export default connection;

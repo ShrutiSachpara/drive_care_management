@@ -9,11 +9,25 @@ import {
   asyncHandler,
 } from './app/helper/error';
 import { logger } from './app/logger/logger';
+import router from './app/routes/route';
+import bodyParser from 'body-parser';
 
 const app = express();
+
+app.use(
+  bodyParser.urlencoded({
+    extended: false,
+    limit: '50mb',
+  }),
+);
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+app.use('/', router);
 
 app.get('/', (req, res) => {
   res.send('hello world');
