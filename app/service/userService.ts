@@ -27,7 +27,6 @@ export const register = asyncHandler(async (req, res) => {
       res,
       code: StatusCodes.BAD_REQUEST,
       status: RESPONSE_STATUS.ERROR,
-      data: undefined,
       message: `User ${message.ALREADY_REGISTERED}`,
     });
   }
@@ -42,13 +41,12 @@ export const register = asyncHandler(async (req, res) => {
 
   await DbService.create(User, updateData);
 
-  logger.info(`Congratulation! You are ${message.REGISTERED_SUCCESS}`);
+  logger.info(message.REGISTERED_SUCCESS);
   handleResponse({
     res,
     code: StatusCodes.CREATED,
     status: RESPONSE_STATUS.SUCCESS,
-    data: undefined,
-    message: `Congratulation! You are ${message.REGISTERED_SUCCESS}`,
+    message: message.REGISTERED_SUCCESS,
   });
 });
 
@@ -66,7 +64,6 @@ export const login = asyncHandler(async (req, res) => {
       res,
       code: StatusCodes.NOT_FOUND,
       status: RESPONSE_STATUS.ERROR,
-      data: undefined,
       message: message.USER_NOT_FOUND,
     });
   }
@@ -82,22 +79,21 @@ export const login = asyncHandler(async (req, res) => {
 
     const token = generateToken(tokenObj);
 
-    logger.info(`${findUser.role} is ${message.LOGIN_SUCCESS}`);
+    logger.info(message.LOGIN_SUCCESS);
     handleResponse({
       res,
       code: StatusCodes.OK,
       status: RESPONSE_STATUS.SUCCESS,
       data: token,
-      message: `${findUser.role} is ${message.LOGIN_SUCCESS}`,
+      message: message.LOGIN_SUCCESS,
     });
   } else {
-    logger.error(`Email and Password ${message.DOES_NOT_MATCH}`);
+    logger.error(message.DOES_NOT_MATCH);
     handleResponse({
       res,
       code: StatusCodes.BAD_REQUEST,
       status: RESPONSE_STATUS.ERROR,
-      data: undefined,
-      message: `Email and Password ${message.DOES_NOT_MATCH}`,
+      message: message.DOES_NOT_MATCH,
     });
   }
 });
@@ -110,7 +106,15 @@ export const viewProfile = asyncHandler(
     const userData = await DbService.findOne(
       User,
       { id: userId, is_deleted: false },
-      ['id', 'name', 'email_id', 'phone_no', 'role', 'profile_image'],
+      {
+        exclude: [
+          'password',
+          'created_at',
+          'updated_at',
+          'is_active',
+          'is_deleted',
+        ],
+      },
     );
     if (userData) {
       logger.info(`User profile ${message.GET_SUCCESS}`);
@@ -119,7 +123,6 @@ export const viewProfile = asyncHandler(
         code: StatusCodes.OK,
         status: RESPONSE_STATUS.SUCCESS,
         data: userData,
-        message: undefined,
       });
     } else {
       logger.error(`User ${message.NOT_FOUND}`);
@@ -127,7 +130,6 @@ export const viewProfile = asyncHandler(
         res,
         code: StatusCodes.NOT_FOUND,
         status: RESPONSE_STATUS.ERROR,
-        data: undefined,
         message: `User ${message.NOT_FOUND}`,
       });
     }
@@ -150,7 +152,6 @@ export const updateProfile = asyncHandler(
         res,
         code: StatusCodes.NOT_FOUND,
         status: RESPONSE_STATUS.ERROR,
-        data: undefined,
         message: `${message.FAILED_TO} find user.`,
       });
     }
@@ -171,9 +172,8 @@ export const updateProfile = asyncHandler(
       logger.info(`Your profile is ${message.UPDATE_SUCCESS}`);
       handleResponse({
         res,
-        code: StatusCodes.OK,
+        code: StatusCodes.ACCEPTED,
         status: RESPONSE_STATUS.SUCCESS,
-        data: undefined,
         message: `Your profile is ${message.UPDATE_SUCCESS}`,
       });
     } else {
@@ -182,7 +182,6 @@ export const updateProfile = asyncHandler(
         res,
         code: StatusCodes.BAD_REQUEST,
         status: RESPONSE_STATUS.ERROR,
-        data: undefined,
         message: `${message.FAILED_TO} update profile`,
       });
     }

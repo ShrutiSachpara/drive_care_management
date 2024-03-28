@@ -14,11 +14,7 @@ export const DbService = {
     return collection.bulkCreate(insertData, { transaction });
   },
 
-  findOne: (
-    collection: any,
-    condition: unknown,
-    selectAttribute?: string[],
-  ) => {
+  findOne: (collection: any, condition: unknown, selectAttribute?: any) => {
     return collection.findOne({
       attributes: selectAttribute,
       where: condition,
@@ -33,17 +29,6 @@ export const DbService = {
 
   destroy: (collection: any, condition: unknown) => {
     return collection.destroy({
-      where: condition,
-    });
-  },
-
-  findAll: (
-    collection: any,
-    condition: unknown,
-    selectAttribute?: string[],
-  ) => {
-    return collection.findAll({
-      attributes: selectAttribute,
       where: condition,
     });
   },
