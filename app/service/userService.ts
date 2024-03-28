@@ -8,7 +8,14 @@ import { DbService } from '../helper/serviceLayer';
 import { asyncHandler } from '../helper/error';
 import { handleResponse } from '../helper/response';
 import { logger } from '../logger/logger';
+import { Request, Response } from 'express';
 const saltRounds = 10;
+
+interface CustomRequest extends Request {
+  user: {
+    id: number;
+  };
+}
 
 export const register = asyncHandler(async (req, res) => {
   const { email_id, password } = req.body;
@@ -48,7 +55,10 @@ export const register = asyncHandler(async (req, res) => {
 export const login = asyncHandler(async (req, res) => {
   const { email_id, password } = req.body;
 
-  const findUser = await DbService.findOne(User, { email_id });
+  const findUser = await DbService.findOne(User, {
+    email_id,
+    is_deleted: false,
+  });
 
   if (!findUser) {
     logger.error(message.USER_NOT_FOUND);
@@ -92,81 +102,89 @@ export const login = asyncHandler(async (req, res) => {
   }
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const viewProfile = asyncHandler(async (req: any, res) => {
-  const userId = req.user.id;
-  const userData = await DbService.findOne(
-    User,
-    { id: userId, is_deleted: false },
-    ['id', 'name', 'email_id', 'phone_no', 'role', 'profile_image'],
-  );
-  if (userData) {
-    logger.info(`User profile ${message.GET_SUCCESS}`);
-    handleResponse({
-      res,
-      code: StatusCodes.OK,
-      status: RESPONSE_STATUS.SUCCESS,
-      data: userData,
-      message: undefined,
+export const viewProfile = asyncHandler(
+  async (req: Request | CustomRequest, res: Response) => {
+    const customReq = req as CustomRequest;
+    const userId: number = customReq.user.id;
+
+    const userData = await DbService.findOne(
+      User,
+      { id: userId, is_deleted: false },
+      ['id', 'name', 'email_id', 'phone_no', 'role', 'profile_image'],
+    );
+    if (userData) {
+      logger.info(`User profile ${message.GET_SUCCESS}`);
+      handleResponse({
+        res,
+        code: StatusCodes.OK,
+        status: RESPONSE_STATUS.SUCCESS,
+        data: userData,
+        message: undefined,
+      });
+    } else {
+      logger.error(`User ${message.NOT_FOUND}`);
+      handleResponse({
+        res,
+        code: StatusCodes.NOT_FOUND,
+        status: RESPONSE_STATUS.ERROR,
+        data: undefined,
+        message: `User ${message.NOT_FOUND}`,
+      });
+    }
+  },
+);
+
+export const updateProfile = asyncHandler(
+  async (req: Request | CustomRequest, res: Response) => {
+    const customReq = req as CustomRequest;
+    const userId: number = customReq.user.id;
+
+    const existingUser = await DbService.findOne(User, {
+      id: userId,
+      is_deleted: false,
     });
-  } else {
-    logger.error(`User ${message.NOT_FOUND}`);
-    handleResponse({
-      res,
-      code: StatusCodes.NOT_FOUND,
-      status: RESPONSE_STATUS.ERROR,
-      data: undefined,
-      message: `User ${message.NOT_FOUND}`,
-    });
-  }
-});
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const updateProfile = asyncHandler(async (req: any, res) => {
-  const id = req.user.id;
+    if (!existingUser) {
+      logger.error(`${message.FAILED_TO} find user.`);
+      handleResponse({
+        res,
+        code: StatusCodes.NOT_FOUND,
+        status: RESPONSE_STATUS.ERROR,
+        data: undefined,
+        message: `${message.FAILED_TO} find user.`,
+      });
+    }
 
-  const existingUser = await DbService.findOne(User, { id });
+    const updateData = { ...req.body };
 
-  if (!existingUser) {
-    logger.error(`${message.FAILED_TO} find user.`);
-    handleResponse({
-      res,
-      code: StatusCodes.NOT_FOUND,
-      status: RESPONSE_STATUS.ERROR,
-      data: undefined,
-      message: `${message.FAILED_TO} find user.`,
-    });
-  }
+    if (req.file) {
+      updateData.profile_image = req.file.filename;
+    }
 
-  const updateData = { ...req.body };
+    const [updatedProfile] = await DbService.update(
+      User,
+      { id: userId, is_deleted: false },
+      updateData,
+    );
 
-  if (req.file) {
-    updateData.profile_image = req.file.filename;
-  }
-
-  const [updatedProfile] = await DbService.update(
-    User,
-    { id: req.user.id },
-    updateData,
-  );
-
-  if (updatedProfile === 1) {
-    logger.info(`Your profile is ${message.UPDATE_SUCCESS}`);
-    handleResponse({
-      res,
-      code: StatusCodes.OK,
-      status: RESPONSE_STATUS.SUCCESS,
-      data: undefined,
-      message: `Your profile is ${message.UPDATE_SUCCESS}`,
-    });
-  } else {
-    logger.error(`${message.FAILED_TO} update profile`);
-    handleResponse({
-      res,
-      code: StatusCodes.BAD_REQUEST,
-      status: RESPONSE_STATUS.ERROR,
-      data: undefined,
-      message: `${message.FAILED_TO} update profile`,
-    });
-  }
-});
+    if (updatedProfile === 1) {
+      logger.info(`Your profile is ${message.UPDATE_SUCCESS}`);
+      handleResponse({
+        res,
+        code: StatusCodes.OK,
+        status: RESPONSE_STATUS.SUCCESS,
+        data: undefined,
+        message: `Your profile is ${message.UPDATE_SUCCESS}`,
+      });
+    } else {
+      logger.error(`${message.FAILED_TO} update profile`);
+      handleResponse({
+        res,
+        code: StatusCodes.BAD_REQUEST,
+        status: RESPONSE_STATUS.ERROR,
+        data: undefined,
+        message: `${message.FAILED_TO} update profile`,
+      });
+    }
+  },
+);
