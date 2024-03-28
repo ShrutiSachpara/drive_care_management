@@ -53,7 +53,6 @@ export const handleErrors = (
     res,
     code: StatusCodes.INTERNAL_SERVER_ERROR,
     status: RESPONSE_STATUS.ERROR,
-    data: undefined,
     message: err.message,
   });
 };
@@ -92,12 +91,21 @@ export const handleJoiErrors = (
 export const errorHandler = (err: any, res: Response) => {
   if (isCustomError(err)) {
     if (err.original?.sqlMessage) {
-      return res.status(500).json({ error: err.original.sqlMessage });
+      handleError({
+        res,
+        code: StatusCodes.INTERNAL_SERVER_ERROR,
+        status: RESPONSE_STATUS.ERROR,
+        message: err.original.sqlMessage,
+      });
     }
   }
-  return res
-    .status(500)
-    .json({ error: err.message || 'Internal Server Error' });
+
+  handleError({
+    res,
+    code: StatusCodes.INTERNAL_SERVER_ERROR,
+    status: RESPONSE_STATUS.ERROR,
+    message: err.message || 'Internal Server Error',
+  });
 };
 
 export const asyncHandler = (

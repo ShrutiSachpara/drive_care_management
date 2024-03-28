@@ -45,7 +45,6 @@ export const authorization = (roles: string[]) => {
           res,
           status: RESPONSE_STATUS.ERROR,
           code: StatusCodes.UNAUTHORIZED,
-          data: undefined,
           message: message.AUTH_MISSING,
         });
       }
@@ -63,7 +62,6 @@ export const authorization = (roles: string[]) => {
           res,
           status: RESPONSE_STATUS.ERROR,
           code: StatusCodes.UNAUTHORIZED,
-          data: undefined,
           message: message.ACCESS_REQUIRED,
         });
       }
@@ -87,8 +85,6 @@ export const authorization = (roles: string[]) => {
         res,
         status: RESPONSE_STATUS.ERROR,
         code: StatusCodes.UNAUTHORIZED,
-        data: undefined,
-        message: undefined,
         error: errorResponse,
       });
     }
