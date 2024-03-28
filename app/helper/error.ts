@@ -53,7 +53,6 @@ export const handleErrors = (
     res,
     code: StatusCodes.INTERNAL_SERVER_ERROR,
     status: RESPONSE_STATUS.ERROR,
-    data: undefined,
     message: err.message,
   });
 };
