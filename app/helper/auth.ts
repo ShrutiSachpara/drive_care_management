@@ -4,53 +4,66 @@ import { message } from '../utils/message';
 import { Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { logger } from '../logger/logger';
-import { GeneralError } from '../utils/error';
+import { handleResponse } from './response';
 
 interface JwtPayload {
   id: string;
   role: string;
 }
 
-export const generateToken = (data: { id: string; role: string }): string => {
-  return jwt.sign({ id: data.id, role: data.role }, '123', {
-    expiresIn: '365d',
-  });
+export const generateToken = (data: {
+  id: string;
+  role: string;
+  name: string;
+}): string => {
+  return jwt.sign(
+    {
+      id: data.id,
+      role: data.role,
+      name: data.name,
+    },
+    '123',
+    {
+      expiresIn: '365d',
+    },
+  );
 };
 
-export const authorization = (roles: string[] = []) => {
+export const authorization = (roles: string[]) => {
   return (
-    req: { header: (arg: string) => string | null; user?: JwtPayload },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    req: any,
     res: Response,
     next: NextFunction,
   ) => {
     try {
       const token: string = req.header('Authorization')!;
+
       if (!token) {
         logger.error(message.AUTH_MISSING);
-        next(
-          new GeneralError(
-            message.AUTH_MISSING,
-            StatusCodes.OK,
-            undefined,
-            RESPONSE_STATUS.ERROR,
-          ),
-        );
+        handleResponse({
+          res,
+          status: RESPONSE_STATUS.ERROR,
+          code: StatusCodes.UNAUTHORIZED,
+          message: message.AUTH_MISSING,
+        });
       }
 
       const verified: JwtPayload = jwt.verify(token, '123') as JwtPayload;
       req.user = verified;
+      roles.some((role) => role === verified.role);
+
       if (roles.length > 0 && roles.some((role) => role === verified.role)) {
         next();
       } else {
         logger.error(message.ACCESS_REQUIRED);
-        next(
-          new GeneralError(
-            message.ACCESS_REQUIRED,
-            StatusCodes.UNAUTHORIZED,
-            undefined,
-            RESPONSE_STATUS.ERROR,
-          ),
-        );
+
+        handleResponse({
+          res,
+          status: RESPONSE_STATUS.ERROR,
+          code: StatusCodes.UNAUTHORIZED,
+          message: message.ACCESS_REQUIRED,
+        });
       }
     } catch (err: unknown) {
       let errorResponse;
@@ -63,19 +76,17 @@ export const authorization = (roles: string[] = []) => {
         errorResponse = message.TOKEN_INVALID;
         break;
       default:
-        errorResponse = `${message.REQUEST_FAILURE} authorization.`;
+        errorResponse = `${message.FAILED_TO} authorization.`;
         break;
       }
 
       logger.error(errorResponse);
-      next(
-        new GeneralError(
-          errorResponse,
-          StatusCodes.UNAUTHORIZED,
-          undefined,
-          RESPONSE_STATUS.ERROR,
-        ),
-      );
+      handleResponse({
+        res,
+        status: RESPONSE_STATUS.ERROR,
+        code: StatusCodes.UNAUTHORIZED,
+        error: errorResponse,
+      });
     }
   };
 };

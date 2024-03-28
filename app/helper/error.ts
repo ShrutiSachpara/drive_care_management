@@ -2,6 +2,8 @@ import { GeneralError } from '../utils/error';
 import { StatusCodes } from 'http-status-codes';
 import { logger } from '../logger/logger';
 import { NextFunction, Request, Response } from 'express';
+import { handleError } from './response';
+import { RESPONSE_STATUS } from '../utils/enum';
 
 const statusToSet = 400;
 
@@ -45,9 +47,12 @@ export const handleErrors = (
         result: err.data !== '' ? err.data : undefined,
       });
   }
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-    status: 'error',
+
+  logger.info(err.message);
+  handleError({
+    res,
     code: StatusCodes.INTERNAL_SERVER_ERROR,
+    status: RESPONSE_STATUS.ERROR,
     message: err.message,
   });
 };
@@ -70,6 +75,7 @@ export const handleJoiErrors = (
         };
       });
     }
+
     res.status(statusToSet).json({
       status: 'error',
       code: StatusCodes.BAD_REQUEST,
@@ -81,13 +87,25 @@ export const handleJoiErrors = (
   }
 };
 
-export const errorHandler = (err: unknown, res: Response) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const errorHandler = (err: any, res: Response) => {
   if (isCustomError(err)) {
     if (err.original?.sqlMessage) {
-      return res.status(500).json({ error: err.original.sqlMessage });
+      handleError({
+        res,
+        code: StatusCodes.INTERNAL_SERVER_ERROR,
+        status: RESPONSE_STATUS.ERROR,
+        message: err.original.sqlMessage,
+      });
     }
   }
-  return res.status(500).json({ error: 'Internal server error' });
+
+  handleError({
+    res,
+    code: StatusCodes.INTERNAL_SERVER_ERROR,
+    status: RESPONSE_STATUS.ERROR,
+    message: err.message || 'Internal Server Error',
+  });
 };
 
 export const asyncHandler = (

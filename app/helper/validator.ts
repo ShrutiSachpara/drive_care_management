@@ -1,3 +1,5 @@
-export const validator = from('express-joi-validation').createValidator({
+import { createValidator } from 'express-joi-validation';
+
+export const validator = createValidator({
   passError: true,
 });
